@@ -52,6 +52,7 @@
   .empty{color:var(--muted);text-align:center;padding:20px;border:2px dashed #e6eefc;border-radius:8px;font-size:13px}
 </style>
 </head>
+<link rel="manifest" href="manifest.json">
 <body>
 
 <header>
@@ -232,6 +233,12 @@ saveBtn.addEventListener('click', async ()=>{
 // Inicialização
 fetchLinks();
 </script>
-
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js")
+      .then(() => console.log("Service Worker registrado"))
+      .catch(err => console.error("SW erro:", err));
+  }
+</script>
 </body>
 </html>
