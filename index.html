@@ -6,6 +6,8 @@
 <title>Estante</title>
 <link rel="icon" href="favicon.ico" type="image/x-icon" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Adicionando Feather Icons -->
+<script src="https://unpkg.com/feather-icons"></script>
 <style>
   :root{
     --bg:#f4f7fb; --card:#ffffff; --muted:#6b7280; --accent:#3b82f6;
@@ -14,14 +16,11 @@
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);min-height:100vh;color:#0f172a;transition: background 0.2s}
-  header{display:flex;align-items:center;justify-content:space-between;padding:16px}
+  header{display:flex;align-items:center;justify-content:center;padding:16px;position:relative} /* Centraliza o título, permite posicionamento absoluto do botão */
   .brand{display:flex;align-items:center;gap:10px}
-  .logo{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),#7c3aed);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:18px;box-shadow:var(--shadow);}
   h1{margin:0;font-size:18px}
-  p.sub{margin:0;color:var(--muted);font-size:12px}main{padding:12px}
+  main{padding:12px}
   .controls{display:flex;gap:8px;align-items:center;margin-bottom:12px}
-  .btn{background:var(--accent);color:white;padding:8px 14px;border-radius:8px;border:0;cursor:pointer;font-size:14px;transition:all 0.2s}
-  .btn:hover{background:#2563eb;transform:translateY(-1px)}
   .search{flex:1;display:flex;align-items:center;background:#fff;padding:6px 10px;border-radius:8px;border:1px solid #eef2ff}
   .search input{flex:1;border:0;outline:none;padding:6px;font-size:13px}
 
@@ -33,12 +32,15 @@
   .card:hover{transform:translateY(-2px)}
   .thumb{width:48px;height:48px;border-radius:12px;overflow:hidden;background:#f3f4f6;display:flex;align-items:center;justify-content:center}
   .thumb img{width:100%;height:100%;object-fit:cover}
+  .thumb svg{width:24px;height:24px;color:#4b5563}
   .title{font-weight:500;font-size:13px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%}
 
   .card .actions{display:flex;gap:6px;margin-top:auto}
   .icon-btn{background:#f3f4f6;border:0;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+  .icon-btn svg{width:16px;height:16px;color:#4b5563}
   .icon-btn:hover{background:#e2e8f0}
   .icon-btn.danger{background:#fee2e2;color:#b91c1c}
+  .icon-btn.danger svg{color:#b91c1c}
   .icon-btn.danger:hover{background:#fca5a5}
 
   .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:10}
@@ -50,6 +52,13 @@
 
   footer{height:12px}
   .empty{color:var(--muted);text-align:center;padding:20px;border:2px dashed #e6eefc;border-radius:8px;font-size:13px}
+  .back-btn{background:#f3f4f6;color:#4b5563;padding:8px;border-radius:8px;border:0;cursor:pointer;font-size:14px;transition:all 0.2s;display:flex;align-items:center;justify-content:center;position:absolute;top:16px;right:16px;width:32px;height:32px} /* Posiciona no canto superior direito, apenas ícone */
+  .back-btn svg{width:16px;height:16px}
+  .back-btn:hover{background:#e2e8f0}
+  .add-card{cursor:pointer;justify-content:center} /* Centraliza o conteúdo do card de adição */
+  .add-card .thumb{width:64px;height:64px} /* Aumenta o tamanho do thumb para destacar o "+" */
+  .add-card .thumb svg{width:32px;height:32px;color:#3b82f6}
+  .add-card .title{display:none} /* Remove qualquer título no card de adição */
 </style>
 </head>
 <link rel="manifest" href="manifest.json">
@@ -57,15 +66,11 @@
 
 <header>
   <div class="brand">
-    <div class="logo">B</div>
     <div>
-      <h1>Minha Biblioteca</h1>
-      <p class="sub">Organize seus links em formato de ícones</p>
+      <h1>MEUS LINKS</h1>
     </div>
   </div>
-  <div>
-    <button id="addBtn" class="btn">+ Link</button>
-  </div>
+  <button id="backBtn" class="back-btn" style="display:none"><i data-feather="arrow-left"></i></button>
 </header>
 
 <main>
@@ -76,12 +81,13 @@
   </div>
   <div id="grid" class="grid"></div>
   <div id="emptyMessage" class="empty" style="display:none;margin-top:12px">
-    Nenhum link. Clique em <strong>+ Link</strong> para começar.
+    Nenhum item. Clique no card <strong>+</strong> para começar.
   </div>
 </main>
 
 <footer></footer>
 
+<!-- Modal Link -->
 <div id="modalBackdrop" class="modal-backdrop">
   <div class="modal">
     <h2 id="modalTitle">Adicionar link</h2>
@@ -98,16 +104,23 @@
       <input id="inputIcon" placeholder="URL do ícone" />
     </div>
     <div class="row">
-      <button id="cancelBtn" class="icon-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-          <path fill-rule="evenodd" d="M6.707 6.707a1 1 0 0 1 1.414 0L12 10.586l3.879-3.879a1 1 0 1 1 1.414 1.414L13.414 12l3.879 3.879a1 1 0 0 1-1.414 1.414L12 13.414l-3.879 3.879a1 1 0 0 1-1.414-1.414L10.586 12 6.707 8.121a1 1 0 0 1 0-1.414z" clip-rule="evenodd"/>
-        </svg>
-      </button>
-      <button id="saveBtn" class="icon-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-          <path fill-rule="evenodd" d="M20.707 6.293a1 1 0 0 1 0 1.414l-11 11a1 1 0 0 1-1.414 0l-5-5a1 1 0 0 1 1.414-1.414L9 16.586l10.293-10.293a1 1 0 0 1 1.414 0z" clip-rule="evenodd"/>
-        </svg>
-      </button>
+      <button id="cancelBtn" class="icon-btn"><i data-feather="x"></i></button>
+      <button id="saveBtn" class="icon-btn"><i data-feather="check"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Pasta -->
+<div id="modalFolderBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <h2 id="modalFolderTitle">Adicionar pasta</h2>
+    <div class="field">
+      <label>Nome da pasta</label>
+      <input id="inputFolderName" placeholder="Nome da pasta" />
+    </div>
+    <div class="row">
+      <button id="cancelFolderBtn" class="icon-btn"><i data-feather="x"></i></button>
+      <button id="saveFolderBtn" class="icon-btn"><i data-feather="check"></i></button>
     </div>
   </div>
 </div>
@@ -132,7 +145,6 @@ const db = getFirestore(app);
 // Elementos
 const grid = document.getElementById('grid');
 const modalBackdrop = document.getElementById('modalBackdrop');
-const addBtn = document.getElementById('addBtn');
 const cancelBtn = document.getElementById('cancelBtn');
 const saveBtn = document.getElementById('saveBtn');
 const inputUrl = document.getElementById('inputUrl');
@@ -141,17 +153,23 @@ const inputIcon = document.getElementById('inputIcon');
 const modalTitle = document.getElementById('modalTitle');
 const emptyMessage = document.getElementById('emptyMessage');
 const searchInput = document.getElementById('search');
+const backBtn = document.getElementById('backBtn');
+
+const modalFolderBackdrop = document.getElementById('modalFolderBackdrop');
+const modalFolderTitle = document.getElementById('modalFolderTitle');
+const inputFolderName = document.getElementById('inputFolderName');
+const cancelFolderBtn = document.getElementById('cancelFolderBtn');
+const saveFolderBtn = document.getElementById('saveFolderBtn');
 
 let links = [];
+let folders = [];
 let editingLink = null;
+let editingFolder = null;
+let currentFolder = null;
 
-// Funções
-function ensureHttp(url){return /^https?:\/\//i.test(url)?url:'https://'+url}
-function fetchFavicon(url){ try{const domain=(new URL(url)).origin; return domain+'/favicon.ico';}catch(e){return ''} }
-function favIconUrl(link){ return link.icon ? link.icon : fetchFavicon(link.url) || `https://www.google.com/s2/favicons?domain=${(new URL(link.url)).hostname}&sz=64`; }
-
-// Firestore CRUD
+// Firestore
 const linksCollection = collection(db, "links");
+const foldersCollection = collection(db, "folders");
 
 async function fetchLinks() {
   const snapshot = await getDocs(linksCollection);
@@ -159,13 +177,28 @@ async function fetchLinks() {
   render();
 }
 
+async function fetchFolders() {
+  const snapshot = await getDocs(foldersCollection);
+  folders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  render();
+}
+
 async function saveLink(link) {
   if(link.id){
-    await updateDoc(doc(db, "links", link.id), { url: link.url, title: link.title, icon: link.icon });
+    await updateDoc(doc(db, "links", link.id), { url: link.url, title: link.title, icon: link.icon, folder: currentFolder });
   } else {
-    await addDoc(linksCollection, link);
+    await addDoc(linksCollection, { ...link, folder: currentFolder });
   }
   await fetchLinks();
+}
+
+async function saveFolder(folder) {
+  if(folder.id){
+    await updateDoc(doc(db, "folders", folder.id), { name: folder.name });
+  } else {
+    await addDoc(foldersCollection, folder);
+  }
+  await fetchFolders();
 }
 
 async function deleteLink(id){
@@ -173,56 +206,112 @@ async function deleteLink(id){
   await fetchLinks();
 }
 
-// Renderização
-function render(filter=''){
-  grid.innerHTML = '';
-  const list = links.filter(l => (l.title||'').toLowerCase().includes(filter.toLowerCase()) || (l.url||'').toLowerCase().includes(filter.toLowerCase()));
-  emptyMessage.style.display = list.length===0 ? 'block':'none';
-  
-  list.forEach(link => {
-    const card = document.createElement('div'); card.className='card';
-    const thumb = document.createElement('div'); thumb.className='thumb';
-    const favImg = document.createElement('img');
-    favImg.src = favIconUrl(link);
-    favImg.onerror = ()=>{favImg.src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="%23e5e7eb"/></svg>'};
-    thumb.appendChild(favImg);
-
-    const title = document.createElement('div'); title.className='title'; title.textContent = link.title || (new URL(link.url)).hostname;
-
-    const actions = document.createElement('div'); actions.className='actions';
-
-    const openBtn = document.createElement('button'); openBtn.className='icon-btn';
-    openBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 4a1 1 0 0 1 1 1v6h6a1 1 0 0 1 0 2h-6v6a1 1 0 0 1-2 0v-6H5a1 1 0 0 1 0-2h6V5a1 1 0 0 1 1-1z" clip-rule="evenodd"/></svg>';
-    openBtn.onclick = ()=>window.open(link.url,'_blank');
-
-    const editBtn = document.createElement('button'); editBtn.className='icon-btn';
-    editBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M16.293 3.293a1 1 0 0 1 1.414 0l3 3a1 1 0 0 1 0 1.414l-10 10a1 1 0 0 1-.39.242l-4 1a1 1 0 0 1-1.266-1.266l1-4a1 1 0 0 1 .242-.39l10-10zM15.586 5L7 13.586l-.707 2.829 2.829-.707L17.586 7H15.586v-2z" clip-rule="evenodd"/></svg>';
-    editBtn.onclick = ()=>openEditModal(link);
-
-    const delBtn = document.createElement('button'); delBtn.className='icon-btn danger';
-    delBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M9 4a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H4a1 1 0 0 0 0 2h1v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6h1a1 1 0 0 0 0-2h-2a1 1 0 0 0-1-1H9zm1 3a1 1 0 0 1 1 1v8a1 1 0 0 1-2 0V8a1 1 0 0 1 1-1z" clip-rule="evenodd"/></svg>';
-    delBtn.onclick = ()=>{ if(confirm('Remover este link?')) deleteLink(link.id) };
-
-    actions.appendChild(openBtn); actions.appendChild(editBtn); actions.appendChild(delBtn);
-    card.appendChild(thumb); card.appendChild(title); card.appendChild(actions);
-    grid.appendChild(card);
-  });
+async function deleteFolder(id){
+  await deleteDoc(doc(db, "folders", id));
+  if(currentFolder===id) currentFolder=null;
+  await fetchFolders();
 }
 
-// Modal
+// Render
+function render(filter=''){
+  grid.innerHTML = '';
+  backBtn.style.display = currentFolder ? 'flex' : 'none';
+
+  let list = [];
+  if(currentFolder){
+    list = links.filter(l => l.folder===currentFolder)
+      .filter(l => (l.title||'').toLowerCase().includes(filter.toLowerCase()) || (l.url||'').toLowerCase().includes(filter.toLowerCase()));
+  } else {
+    list = folders.filter(f => (f.name||'').toLowerCase().includes(filter.toLowerCase()));
+  }
+  emptyMessage.style.display = list.length===0 ? 'block':'none';
+  
+  list.forEach(item => {
+    const card = document.createElement('div'); card.className='card';
+    const thumb = document.createElement('div'); thumb.className='thumb';
+
+    if(currentFolder){
+      // link
+      const favImg = document.createElement('img');
+      favImg.src = item.icon || `https://www.google.com/s2/favicons?domain=${(new URL(item.url)).hostname}&sz=64`;
+      favImg.onerror = ()=>{favImg.src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="%23e5e7eb"/></svg>'};
+      thumb.appendChild(favImg);
+      const title = document.createElement('div'); title.className='title'; title.textContent = item.title || (new URL(item.url)).hostname;
+
+      const actions = document.createElement('div'); actions.className='actions';
+
+      const delBtn = document.createElement('button'); delBtn.className='icon-btn danger';
+      delBtn.innerHTML='<i data-feather="trash-2"></i>';
+      delBtn.onclick = ()=>{ if(confirm('Remover este link?')) deleteLink(item.id) };
+
+      const openBtn = document.createElement('button'); openBtn.className='icon-btn';
+      openBtn.innerHTML='<i data-feather="external-link"></i>';
+      openBtn.onclick = ()=>window.open(item.url,'_blank');
+
+      const editBtn = document.createElement('button'); editBtn.className='icon-btn';
+      editBtn.innerHTML='<i data-feather="edit"></i>';
+      editBtn.onclick = ()=>openEditModal(item);
+
+      actions.appendChild(delBtn); actions.appendChild(openBtn); actions.appendChild(editBtn);
+      card.appendChild(thumb); card.appendChild(title); card.appendChild(actions);
+    } else {
+      // folder
+      thumb.innerHTML='📁'; // Adiciona emoji de pasta
+      thumb.style.fontSize = '24px'; // Ajusta o tamanho do emoji
+      const title = document.createElement('div'); title.className='title'; title.textContent = item.name;
+
+      const actions = document.createElement('div'); actions.className='actions';
+
+      const delBtn = document.createElement('button'); delBtn.className='icon-btn danger';
+      delBtn.innerHTML='<i data-feather="trash-2"></i>';
+      delBtn.onclick = ()=>{ if(confirm('Remover esta pasta?')) deleteFolder(item.id) };
+
+      const openBtn = document.createElement('button'); openBtn.className='icon-btn';
+      openBtn.innerHTML='<i data-feather="arrow-right"></i>';
+      openBtn.onclick = ()=>{ currentFolder=item.id; render(); };
+
+      const editBtn = document.createElement('button'); editBtn.className='icon-btn';
+      editBtn.innerHTML='<i data-feather="edit"></i>';
+      editBtn.onclick = ()=>openEditFolderModal(item);
+
+      actions.appendChild(delBtn); actions.appendChild(openBtn); actions.appendChild(editBtn);
+      card.appendChild(thumb); card.appendChild(title); card.appendChild(actions);
+    }
+    grid.appendChild(card);
+  });
+
+  // Adicionar card de adição
+  const addCard = document.createElement('div');
+  addCard.className = 'card add-card';
+  const addThumb = document.createElement('div');
+  addThumb.className = 'thumb';
+  addThumb.innerHTML = '<i data-feather="plus"></i>';
+  addCard.appendChild(addThumb);
+  addCard.onclick = currentFolder ? openAddModal : openAddFolderModal;
+  grid.appendChild(addCard);
+
+  feather.replace(); // Inicializa os ícones Feather
+}
+
+// Modal Link
 function openAddModal(){ editingLink=null; modalTitle.textContent='Adicionar link'; inputUrl.value=''; inputTitle.value=''; inputIcon.value=''; showModal(); }
 function openEditModal(link){ editingLink=link; modalTitle.textContent='Editar link'; inputUrl.value=link.url; inputTitle.value=link.title||''; inputIcon.value=link.icon||''; showModal(); }
 function showModal(){ modalBackdrop.style.display='flex'; inputUrl.focus(); }
 function closeModal(){ modalBackdrop.style.display='none'; }
 
+// Modal Pasta
+function openAddFolderModal(){ editingFolder=null; modalFolderTitle.textContent='Adicionar pasta'; inputFolderName.value=''; showFolderModal(); }
+function openEditFolderModal(folder){ editingFolder=folder; modalFolderTitle.textContent='Renomear pasta'; inputFolderName.value=folder.name; showFolderModal(); }
+function showFolderModal(){ modalFolderBackdrop.style.display='flex'; inputFolderName.focus(); }
+function closeFolderModal(){ modalFolderBackdrop.style.display='none'; }
+
 // Eventos
-addBtn.addEventListener('click', openAddModal);
 cancelBtn.addEventListener('click', closeModal);
 modalBackdrop.addEventListener('click', (e)=>{ if(e.target===modalBackdrop) closeModal() });
 searchInput.addEventListener('input', e=>render(e.target.value));
 
 saveBtn.addEventListener('click', async ()=>{
-  let url = inputUrl.value.trim(); if(!url) return alert('Informe a URL'); url=ensureHttp(url);
+  let url = inputUrl.value.trim(); if(!url) return alert('Informe a URL'); url = /^https?:\/\//i.test(url)?url:'https://'+url;
   const title = inputTitle.value.trim();
   const icon = inputIcon.value.trim();
   const link = editingLink ? { id: editingLink.id, url, title, icon } : { url, title, icon };
@@ -230,8 +319,24 @@ saveBtn.addEventListener('click', async ()=>{
   closeModal();
 });
 
+cancelFolderBtn.addEventListener('click', closeFolderModal);
+modalFolderBackdrop.addEventListener('click', (e)=>{ if(e.target===modalFolderBackdrop) closeFolderModal() });
+saveFolderBtn.addEventListener('click', async ()=>{
+  let name = inputFolderName.value.trim(); if(!name) return alert('Informe o nome da pasta');
+  const folder = editingFolder ? { id: editingFolder.id, name } : { name };
+  await saveFolder(folder);
+  closeFolderModal();
+});
+
+backBtn.addEventListener('click', () => {
+  currentFolder = null;
+  render();
+});
+
 // Inicialização
+fetchFolders();
 fetchLinks();
+feather.replace(); // Inicializa os ícones Feather na carga inicial
 </script>
 <script>
   if ("serviceWorker" in navigator) {
